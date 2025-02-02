@@ -1,7 +1,6 @@
 # Taha Rashid
 # Jan 29 2025
 # Description: This program is a test program to test accessing and writing to Firebase.
-# The future plan is to make a class and use it in the main program
 
 import firebase_admin
 from firebase_admin import credentials
