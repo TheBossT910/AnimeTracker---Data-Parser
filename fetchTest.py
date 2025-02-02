@@ -1,4 +1,7 @@
+# Taha Rashid
+# January 28, 2025
 # Description: Fetches the next airing episode of an anime from AniList API
+
 import requests
 import datetime
 
