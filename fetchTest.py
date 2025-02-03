@@ -13,7 +13,7 @@ myObj = AnimeFirebaseData()
 # Oshi no Ko: 6KaHVRxICvkkrRYsDiMY
 # Spy x Family: OZtFGA9sVtdxtOCZZTEw
 # Demon Slayer: Zn2VVQJZ8btUIsB3tDvb
-myAnilistID = myObj.getAnime("Zn2VVQJZ8btUIsB3tDvb")
+myAnilistID = myObj.getAnime("SAKAMOTO DAYS")
 print(myAnilistID)  # prints the title of the anime
 
 # AniList API Docs
@@ -56,23 +56,31 @@ response = requests.post(url, json={'query': query, 'variables': variables})
 # print(response.json())
 
 # display the image URLs
+bannerImage = ""
+coverImage = ""
 try:
-  print(response.json()['data']['Media']['bannerImage'])
-  print(response.json()['data']['Media']['coverImage']['extraLarge'])
+  bannerImage = response.json()['data']['Media']['bannerImage']
+  coverImage = response.json()['data']['Media']['coverImage']['extraLarge']
   
+  print(bannerImage)
+  print(coverImage)
 except:
   print("No image found")
 
 # displays the description
+description = ""
 try:
-  print(response.json()['data']['Media']['description']) 
+  description = response.json()['data']['Media']['description']
+  print(description) 
 except:
   print("No description found")
 
-# print(response.json()['data']['Media']['coverImage']['large'])
-# print(response.json()['data']['Media']['coverImage']['medium'])
-
 # Extract the timestamp from the response
-# timestamp = response.json()['data']['Media']['nextAiringEpisode']['airingAt']
-# date = datetime.datetime.fromtimestamp(timestamp)  # Convert the timestamp to readable format
-# print(date.strftime('%Y-%m-%d %H:%M:%S UTC'))  # Convert to readable format
+date = ""
+try:
+  timestamp = response.json()['data']['Media']['nextAiringEpisode']['airingAt'] 
+  date = datetime.datetime.fromtimestamp(timestamp)  # Convert the timestamp to readable format
+  date = date.strftime('%Y-%m-%d %H:%M:%S UTC')
+  print(date)  # Convert to readable format
+except:
+  print("No airing date found")
