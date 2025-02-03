@@ -44,6 +44,55 @@ class AnimeFirebaseData:
         # update the description
         specificAnime.document("general").update({"description": newDescription})
         return True
+    
+    def createAnime(self, animeName, anilistID):
+        general = {
+            "anilist_id": anilistID,
+            "broadcast": "",
+            "category_status": "",
+            "description": "",
+            "episodes": 0,
+            "isFavorite": False,
+            "isRecommended": False,
+            "premiere": "",
+            "rating": "",
+            "title_eng": "",
+            "title_jp": "",
+        }
+        
+        files = {
+            "box_image": "",
+            "doc_id_anime": "",
+            "icon": "",
+            "splash_image": "",
+        }
+        
+        mediaContent = {
+            "air_day": "",
+            "air_time": "",
+            "description": "",
+            "name_eng": "",
+            "name_jp": "",
+            "recap": "",
+        }
+        
+        media = {
+            "episodes": {"1": mediaContent},
+            "movies": {"1": mediaContent},
+        }
+        
+        try:
+            # creating the anime document
+            self.db.collection("animes").document(animeName).set( {"title": animeName} )
+            
+            # creating the anime's subcollections for season 1
+            self.db.collection(f"animes/{animeName}/s1").document("general").set(general)
+            self.db.collection(f"animes/{animeName}/s1").document("files").set(files)
+            self.db.collection(f"animes/{animeName}/s1").document("media").set(media)
+        except:
+            return False
+        
+        return True
 
 # testing class
 # myObj = AnimeFirebaseData()
@@ -53,3 +102,7 @@ class AnimeFirebaseData:
 
 # updated = myObj.updateDescription("6KaHVRxICvkkrRYsDiMY", "This is a new description")
 # print(updated)  # prints True if the description was updated, False otherwise
+
+# creating a new anime document
+# wasCreated = myObj.createAnime("SAKAMOTO DAYS", 177709)
+# print(wasCreated)
