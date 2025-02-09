@@ -12,10 +12,16 @@ class AnimeFirebaseData:
     cred = credentials.Certificate('animetracker-201c9-firebase-adminsdk-z85u9-9cf57505ac.json')
     app = firebase_admin.initialize_app(cred)
     db = firestore.client()
+    titles = set()
     
     def __init__(self):
+        pass
+        
+    @classmethod
+    def getAnimeList(cls):
         # gets all the documents in the collection "animes"
-        docs = self.db.collection("anime_data").stream()
+        docs = cls.db.collection("anime_data").stream()
+        cls.titles = {doc.to_dict()['title'] for doc in docs}
 
     def getAnime(self, animeID):
         # gets a specific anime from the collection "animes"
@@ -87,10 +93,17 @@ class AnimeFirebaseData:
         }
      ):
         
-        try:
+        # check if the anime already exists
+        if animeName in self.titles:
+            return False
+            
+        try:            
             # creating the anime document with a random ID
             documentID = str(uuid.uuid4()) + "PYTHON-TEST"
             self.db.collection("anime_data").document(documentID).set( {"title": animeName, "db_version": 1} )
+            
+            # adding anime doc id to the files subcollection
+            files["doc_id_anime"] = documentID
             
             # creating the anime's data subcollections 
             self.db.collection(f"anime_data/{documentID}/data").document("general").set(general)
@@ -102,11 +115,12 @@ class AnimeFirebaseData:
         return True
 
 # testing class
-# myObj = AnimeFirebaseData()
+myObj = AnimeFirebaseData()
+AnimeFirebaseData.getAnimeList()
 
 # creating a new anime document
-# wasCreated = myObj.createAnime("SAKAMOTO DAYS", 177709)
-# print(wasCreated)
+wasCreated = myObj.createAnime("Oshi no Ko")
+print(wasCreated)
 
 # mediaContent = {
 #     "air_day": "",
