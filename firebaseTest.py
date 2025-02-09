@@ -2,6 +2,7 @@
 # Jan 29 2025
 # Description: This program is a test program to test accessing and writing to Firebase.
 
+import uuid
 import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import firestore
@@ -71,31 +72,29 @@ class AnimeFirebaseData:
         
         media = {
             "episodes": {"1": mediaContent},
-            "movies": {"1": mediaContent},
+            # "movies": {"1": mediaContent},
         }
         
         try:
             # creating the anime document
-            self.db.collection("animes").document(animeName).set( {"title": animeName} )
+            documentID = str(uuid.uuid4()) + "PYTHON-TEST"
+            self.db.collection("anime_data").document(documentID).set( {"title": animeName, "db_version": 1} )
             
             # creating the anime's subcollections for season 1
-            self.db.collection(f"animes/{animeName}/s1").document("general").set(general)
-            self.db.collection(f"animes/{animeName}/s1").document("files").set(files)
-            self.db.collection(f"animes/{animeName}/s1").document("media").set(media)
+            self.db.collection(f"anime_data/{documentID}/data").document("general").set(general)
+            self.db.collection(f"anime_data/{documentID}/data").document("files").set(files)
+            self.db.collection(f"anime_data/{documentID}/data").document("media").set(media)
         except:
             return False
         
         return True
 
 # testing class
-# myObj = AnimeFirebaseData()
-# # get Oshi no Ko data
-# myTitle = myObj.getAnime("6KaHVRxICvkkrRYsDiMY")
-# print(myTitle)  # prints the title of the anime
-
-# updated = myObj.updateDescription("6KaHVRxICvkkrRYsDiMY", "This is a new description")
-# print(updated)  # prints True if the description was updated, False otherwise
+myObj = AnimeFirebaseData()
 
 # creating a new anime document
 # wasCreated = myObj.createAnime("SAKAMOTO DAYS", 177709)
 # print(wasCreated)
+
+myVal = myObj.updateEpisodes("b274de57-2bcc-41f0-9744-f03804704a1cPYTHON-TEST", 0)
+print(myVal)
