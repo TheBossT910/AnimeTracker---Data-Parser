@@ -14,27 +14,20 @@ class AnimeFirebaseData:
     
     def __init__(self):
         # gets all the documents in the collection "animes"
-        docs = self.db.collection("animes").stream()
-        
-        # prints the id and the title of each document
-        # for doc in docs:
-        #     print(f"{doc.id} => {doc.to_dict()}")
+        docs = self.db.collection("anime_data").stream()
 
     def getAnime(self, animeID):
         # gets a specific anime from the collection "animes"
-        specificAnime = self.db.collection(f"animes/{animeID}/s1")
-        animeGeneral = specificAnime.document("general").get().to_dict()
-
-        # print(f"general => {animeGeneral}")
-        # print(animeGeneral["description"])  # prints the description of the anime
+        specificAnime = self.db.collection(f"anime_data/{animeID}/data")
+        animeFiles = specificAnime.document("files").get().to_dict()
         
-        # fetch and return the japanaese title of the anime
-        anilistID = animeGeneral["anilist_id"]
+        # fetch and return the anilist ID
+        anilistID = animeFiles["anilist_id"]
         return anilistID
     
     def updateDescription(self, animeID, newDescription = ""):
         # updates the description of the anime
-        specificAnime = self.db.collection(f"animes/{animeID}/s1")
+        specificAnime = self.db.collection(f"anime_data/{animeID}/data")
         animeGeneral = specificAnime.document("general").get().to_dict()
         
         # don't update if the new description is the same as the old one or if it's empty
