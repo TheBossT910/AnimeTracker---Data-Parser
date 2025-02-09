@@ -5,7 +5,7 @@
 import requests
 import datetime
 
-from firebaseTest import AnimeFirebaseData
+from database import AnimeFirebaseData
 
 # getting anime name from Firebase
 myObj = AnimeFirebaseData()
