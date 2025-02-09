@@ -113,11 +113,20 @@ class AnimeFirebaseData:
         return True
 
 # testing class
-myObj = AnimeFirebaseData()
+# myObj = AnimeFirebaseData()
 
 # creating a new anime document
 # wasCreated = myObj.createAnime("SAKAMOTO DAYS", 177709)
 # print(wasCreated)
 
-myVal = myObj.updateEpisodes("b274de57-2bcc-41f0-9744-f03804704a1cPYTHON-TEST", 0)
-print(myVal)
+# mediaContent = {
+#     "air_day": "",
+#     "air_time": "",
+#     "description": "",
+#     "name_eng": "",
+#     "name_native": "",
+#     "recap": "",
+#     }
+
+# myVal = myObj.updateEpisodes("b274de57-2bcc-41f0-9744-f03804704a1cPYTHON-TEST", 2, mediaContent)
+# print(myVal)
