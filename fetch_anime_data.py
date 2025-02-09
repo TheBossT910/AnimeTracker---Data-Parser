@@ -5,7 +5,7 @@
 import requests
 import datetime
 
-from firebaseTest import AnimeFirebaseData
+from database import AnimeFirebaseData
 
 # function to convert timestamp to readable date
 def timeConverter(timestamp):
@@ -89,11 +89,9 @@ box_image = response['data']['Media']['coverImage']['extraLarge']
 splash_image = response['data']['Media']['bannerImage']
 
 # data for media content (airing times)
+# TODO: use typical_air to display the airing time of the anime as weekday-time format
 typical_air = timeConverter(typical_broadcast)
 # next_air = timeConverter(next_broadcast)
-
-# TODO: use typical_air to display the airing time of the anime as weekday-time format
-
 
 # creating a new anime document using data from the AniList API
 myObj = AnimeFirebaseData()
@@ -120,18 +118,8 @@ files = {
     "splash_image": splash_image,
 }
 
-media = {
-    'episodes': {
-        '1': {
-            "air_day": "",
-            "air_time": "",
-            "description": "",
-            "name_eng": "",
-            "name_native": "",
-            "recap": "",
-        }
-    },
-}
+# TODO: add content for all episodes
+media = {}
 
 animeName = str(title_eng)
 
