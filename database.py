@@ -7,31 +7,33 @@ import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import firestore
 
+ # initialize Firebase
+cred = credentials.Certificate('animetracker-201c9-firebase-adminsdk-z85u9-9cf57505ac.json')
+app = firebase_admin.initialize_app(cred)
+db = firestore.client()
+
 class AnimeFirebaseData:
-    # Use a service account.
-    cred = credentials.Certificate('animetracker-201c9-firebase-adminsdk-z85u9-9cf57505ac.json')
-    app = firebase_admin.initialize_app(cred)
-    db = firestore.client()
-    titles = set()  # saves the different animes as anilist_ids
+    # save the list of animes as anilist_ids
+    titles = set()
     
-    def __init__(self):
-        pass
+    # def __init__(self):
+    #     pass
         
     @classmethod
     def getAnimeList(cls):
         # gets all the anilist_ids and saves them to a set
-        docs = cls.db.collection("anime_data").stream()
+        docs = db.collection("anime_data").stream()
         cls.titles = {doc.to_dict()['anilist_id'] for doc in docs}
 
     # DEBUG
-    def getAnime(self, animeID):
-        # gets a specific anime from the collection "animes"
-        specificAnime = self.db.collection(f"anime_data/{animeID}/data")
-        animeFiles = specificAnime.document("files").get().to_dict()
+    # def getAnime(self, animeID):
+    #     # gets a specific anime from the collection "animes"
+    #     specificAnime = self.db.collection(f"anime_data/{animeID}/data")
+    #     animeFiles = specificAnime.document("files").get().to_dict()
         
-        # fetch and return the anilist ID
-        anilistID = animeFiles["anilist_id"]
-        return anilistID
+    #     # fetch and return the anilist ID
+    #     anilistID = animeFiles["anilist_id"]
+    #     return anilistID
     
     # def updateDescription(self, animeID, newDescription = ""):
     #     # updates the description of the anime
@@ -47,8 +49,9 @@ class AnimeFirebaseData:
     #     return True
     
     # method to update the number of episodes and add information for the new episode
-    def updateEpisodes(self, animeID, newEpisode = -1, content = {}):
-        specificAnime = self.db.collection(f"anime_data/{animeID}/data")
+    @classmethod
+    def updateEpisodes(cls, animeID, newEpisode = -1, content = {}):
+        specificAnime = db.collection(f"anime_data/{animeID}/data")
         animeMedia = specificAnime.document("media").get().to_dict()
         
         # don't update if the new episodes is the same as an old one or if it's empty or if the content is invalid
@@ -66,9 +69,11 @@ class AnimeFirebaseData:
         specificAnime.document("media").set({"episodes": {f"{newEpisode}": content}}, merge=True)
         # confirms a new episode was added
         return True
-            
+    
+    # creates a new anime document
+    @classmethod
     def createAnime(
-        self, 
+        cls, 
         details = {
         "db_version": 1,
         "title": "",
@@ -98,7 +103,7 @@ class AnimeFirebaseData:
      ):
         
         # check if the anime already exists
-        if details["anilist_id"] in self.titles:
+        if details["anilist_id"] in cls.titles:
             return False
             
         try:            
@@ -107,18 +112,20 @@ class AnimeFirebaseData:
             # adding anime doc id to the files subcollection
             details["doc_id"] = documentID
             # creating the main anime document
-            self.db.collection("anime_data").document(documentID).set(details)
+            db.collection("anime_data").document(documentID).set(details)
             
             # creating the anime's data subcollections 
-            self.db.collection(f"anime_data/{documentID}/data").document("general").set(general)
-            self.db.collection(f"anime_data/{documentID}/data").document("files").set(files)
-            self.db.collection(f"anime_data/{documentID}/data").document("media").set(media)
+            db.collection(f"anime_data/{documentID}/data").document("general").set(general)
+            db.collection(f"anime_data/{documentID}/data").document("files").set(files)
+            db.collection(f"anime_data/{documentID}/data").document("media").set(media)
         except:
             return False
         
         return True
 
 # testing class
+# AnimeFirebaseData.getAnimeList()
+# AnimeFirebaseData.createAnime()
 # AnimeFirebaseData.getAnimeList()
 # myObj = AnimeFirebaseData()
 
