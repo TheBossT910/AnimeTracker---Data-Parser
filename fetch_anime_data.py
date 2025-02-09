@@ -7,6 +7,16 @@ import datetime
 
 from firebaseTest import AnimeFirebaseData
 
+# function to convert timestamp to readable date
+def timeConverter(timestamp):
+    date = ""
+    try:
+        date = datetime.datetime.fromtimestamp(timestamp)  # Convert the timestamp to readable format
+        date = date.strftime('%Y-%m-%d %H:%M:%S UTC')
+        return date
+    except:
+        return "No airing date found"
+
 # AniList API Docs
 # https://docs.anilist.co/
 
