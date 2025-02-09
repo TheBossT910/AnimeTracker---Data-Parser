@@ -119,12 +119,12 @@ class AnimeFirebaseData:
         return True
 
 # testing class
-myObj = AnimeFirebaseData()
-AnimeFirebaseData.getAnimeList()
+# AnimeFirebaseData.getAnimeList()
+# myObj = AnimeFirebaseData()
 
-# creating a new anime document
-wasCreated = myObj.createAnime("Oshi no Ko")
-print(wasCreated)
+# # creating a new anime document
+# wasCreated = myObj.createAnime()
+# print(wasCreated)
 
 # mediaContent = {
 #     "air_day": "",
