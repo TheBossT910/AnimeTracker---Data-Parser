@@ -62,7 +62,7 @@ query($mediaId: Int)  {
 '''
 
 # Define our query variables and values that will be used in the query request
-myAnilistID = 177709
+myAnilistID = 176496    # ID for "Solo Leveling S2"
 variables = {
     'mediaId': myAnilistID
 }
