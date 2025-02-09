@@ -95,8 +95,6 @@ typical_air = timeConverter(typical_broadcast)
 
 # saving all current anime titles in Firebase to a set
 AnimeFirebaseData.getAnimeList()
-# creating a new anime document using data from the AniList API
-myObj = AnimeFirebaseData()
 
 # formating data for the anime document
 details = {
@@ -133,5 +131,5 @@ media = {
 animeName = str(title_eng)
 
 # creating the anime document
-isSuccess = myObj.createAnime(details, general, files, media)
+isSuccess = AnimeFirebaseData.createAnime(details, general, files, media)
 print(isSuccess)
