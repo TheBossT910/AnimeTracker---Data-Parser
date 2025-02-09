@@ -26,22 +26,45 @@ class AnimeFirebaseData:
         anilistID = animeFiles["anilist_id"]
         return anilistID
     
-    def updateDescription(self, animeID, newDescription = ""):
-        # updates the description of the anime
-        specificAnime = self.db.collection(f"anime_data/{animeID}/data")
-        animeGeneral = specificAnime.document("general").get().to_dict()
+    # def updateDescription(self, animeID, newDescription = ""):
+    #     # updates the description of the anime
+    #     specificAnime = self.db.collection(f"anime_data/{animeID}/data")
+    #     animeGeneral = specificAnime.document("general").get().to_dict()
         
-        # don't update if the new description is the same as the old one or if it's empty
-        if (newDescription == animeGeneral["description"] or newDescription == ""):
+    #     # don't update if the new description is the same as the old one or if it's empty
+    #     if (newDescription == animeGeneral["description"] or newDescription == ""):
+    #         return False
+        
+    #     # update the description
+    #     specificAnime.document("general").update({"description": newDescription})
+    #     return True
+    
+    # method to update the number of episodes and add information for the new episode
+    def updateEpisodes(self, animeID, newEpisode = -1, content = {}):
+        specificAnime = self.db.collection(f"anime_data/{animeID}/data")
+        animeMedia = specificAnime.document("media").get().to_dict()
+        
+        # don't update if the new episodes is the same as an old one or if it's empty or if the content is invalid
+        if (newEpisode == -1): 
+            # print("no new episode") 
+            return False
+        if (str(newEpisode) in animeMedia["episodes"]):
+            # print("newEpisode already exists")
+            return False
+        if (len(content) != 6):
+            # print("invalid content")
             return False
         
-        # update the description
-        specificAnime.document("general").update({"description": newDescription})
+        # add the new episode
+        specificAnime.document("media").set({"episodes": {f"{newEpisode}": content}}, merge=True)
+        # confirms a new episode was added
         return True
+            
     
-    def createAnime(self, animeName, anilistID):
+    def createAnime(
+        self, 
+        animeName,
         general = {
-            "anilist_id": anilistID,
             "broadcast": "",
             "category_status": "",
             "description": "",
