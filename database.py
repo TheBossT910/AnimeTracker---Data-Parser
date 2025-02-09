@@ -12,17 +12,18 @@ class AnimeFirebaseData:
     cred = credentials.Certificate('animetracker-201c9-firebase-adminsdk-z85u9-9cf57505ac.json')
     app = firebase_admin.initialize_app(cred)
     db = firestore.client()
-    titles = set()
+    titles = set()  # saves the different animes as anilist_ids
     
     def __init__(self):
         pass
         
     @classmethod
     def getAnimeList(cls):
-        # gets all the documents in the collection "animes"
+        # gets all the anilist_ids and saves them to a set
         docs = cls.db.collection("anime_data").stream()
-        cls.titles = {doc.to_dict()['title'] for doc in docs}
+        cls.titles = {doc.to_dict()['anilist_id'] for doc in docs}
 
+    # DEBUG
     def getAnime(self, animeID):
         # gets a specific anime from the collection "animes"
         specificAnime = self.db.collection(f"anime_data/{animeID}/data")
