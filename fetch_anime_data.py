@@ -75,23 +75,66 @@ response = requests.post(url, json={'query': query, 'variables': variables}).jso
 
 # data for anime general
 anilist_ID = response['data']['Media']['id']
+typical_broadcast = response['data']['Media']['airingSchedule']['nodes'][0]['airingAt']
 description = response['data']['Media']['description']
 episodes = response['data']['Media']['episodes']
 premiere = response['data']['Media']['season'] + " " + str(response['data']['Media']['seasonYear'])
 title_eng = response['data']['Media']['title']['english']
 title_native = response['data']['Media']['title']['native']
 
+# next_broadcast = response['data']['Media']['airingSchedule']['nodes'][-1]['airingAt']
+
 # data for anime files
 box_image = response['data']['Media']['coverImage']['extraLarge']
 splash_image = response['data']['Media']['bannerImage']
 
 # data for media content (airing times)
-next_broadcast = response['data']['Media']['airingSchedule']['nodes'][-1]['airingAt']
-date = ""
-try:
-  timestamp = next_broadcast
-  date = datetime.datetime.fromtimestamp(timestamp)  # Convert the timestamp to readable format
-  date = date.strftime('%Y-%m-%d %H:%M:%S UTC')
-  print(date)
-except:
-  date = "No airing date found"
+typical_air = timeConverter(typical_broadcast)
+# next_air = timeConverter(next_broadcast)
+
+# TODO: use typical_air to display the airing time of the anime as weekday-time format
+
+
+# creating a new anime document using data from the AniList API
+myObj = AnimeFirebaseData()
+
+# formating data for the anime document
+general = {
+    "broadcast": "",
+    "category_status": "",
+    "description": description,
+    "episodes": episodes,
+    "isFavorite": False,
+    "isRecommended": False,
+    "premiere": premiere,
+    "rating": "",
+    "title_eng": title_eng,
+    "title_native": title_native,
+}
+
+files = {
+    "anilist_id": anilist_ID,
+    "doc_id_anime": "",
+    "box_image": box_image,
+    "icon": "",
+    "splash_image": splash_image,
+}
+
+media = {
+    'episodes': {
+        '1': {
+            "air_day": "",
+            "air_time": "",
+            "description": "",
+            "name_eng": "",
+            "name_native": "",
+            "recap": "",
+        }
+    },
+}
+
+animeName = str(title_eng)
+
+# creating the anime document
+isSuccess = myObj.createAnime(animeName, general, files, media)
+print(isSuccess)
