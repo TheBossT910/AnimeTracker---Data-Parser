@@ -93,10 +93,19 @@ splash_image = response['data']['Media']['bannerImage']
 typical_air = timeConverter(typical_broadcast)
 # next_air = timeConverter(next_broadcast)
 
+# saving all current anime titles in Firebase to a set
+AnimeFirebaseData.getAnimeList()
 # creating a new anime document using data from the AniList API
 myObj = AnimeFirebaseData()
 
 # formating data for the anime document
+details = {
+    "db_version": 1,
+    "title": title_eng,
+    "anilist_id": anilist_ID,
+    "doc_id": "",
+}
+
 general = {
     "broadcast": "",
     "category_status": "",
@@ -111,18 +120,18 @@ general = {
 }
 
 files = {
-    "anilist_id": anilist_ID,
-    "doc_id_anime": "",
     "box_image": box_image,
-    "icon": "",
+    "icon_image": "",
     "splash_image": splash_image,
 }
 
 # TODO: add content for all episodes
-media = {}
+media = {
+    "episodes": {},
+}
 
 animeName = str(title_eng)
 
 # creating the anime document
-isSuccess = myObj.createAnime(animeName, general, files, media)
+isSuccess = myObj.createAnime(details, general, files, media)
 print(isSuccess)

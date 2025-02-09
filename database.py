@@ -69,7 +69,12 @@ class AnimeFirebaseData:
             
     def createAnime(
         self, 
-        animeName,
+        details = {
+        "db_version": 1,
+        "title": "",
+        "anilist_id": "",
+        "doc_id": "",
+        },
         general = {
             "broadcast": "",
             "category_status": "",
@@ -83,10 +88,8 @@ class AnimeFirebaseData:
             "title_native": "",
             },
         files = {
-            "anilist_id": "",
-            "doc_id_anime": "",
             "box_image": "",
-            "icon": "",
+            "icon_image": "",
             "splash_image": "",
         },
         media = {
@@ -95,16 +98,16 @@ class AnimeFirebaseData:
      ):
         
         # check if the anime already exists
-        if animeName in self.titles:
+        if details["anilist_id"] in self.titles:
             return False
             
         try:            
             # creating the anime document with a random ID
-            documentID = str(uuid.uuid4()) + "PYTHON-TEST"
-            self.db.collection("anime_data").document(documentID).set( {"title": animeName, "db_version": 1} )
-            
+            documentID = str(uuid.uuid4())
             # adding anime doc id to the files subcollection
-            files["doc_id_anime"] = documentID
+            details["doc_id"] = documentID
+            # creating the main anime document
+            self.db.collection("anime_data").document(documentID).set(details)
             
             # creating the anime's data subcollections 
             self.db.collection(f"anime_data/{documentID}/data").document("general").set(general)
