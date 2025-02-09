@@ -74,36 +74,26 @@ class AnimeFirebaseData:
             "premiere": "",
             "rating": "",
             "title_eng": "",
-            "title_jp": "",
-        }
-        
+            "title_native": "",
+            },
         files = {
-            "box_image": "",
+            "anilist_id": "",
             "doc_id_anime": "",
+            "box_image": "",
             "icon": "",
             "splash_image": "",
-        }
-        
-        mediaContent = {
-            "air_day": "",
-            "air_time": "",
-            "description": "",
-            "name_eng": "",
-            "name_jp": "",
-            "recap": "",
-        }
-        
+        },
         media = {
-            "episodes": {"1": mediaContent},
-            # "movies": {"1": mediaContent},
+            'episodes': {},
         }
+     ):
         
         try:
-            # creating the anime document
+            # creating the anime document with a random ID
             documentID = str(uuid.uuid4()) + "PYTHON-TEST"
             self.db.collection("anime_data").document(documentID).set( {"title": animeName, "db_version": 1} )
             
-            # creating the anime's subcollections for season 1
+            # creating the anime's data subcollections 
             self.db.collection(f"anime_data/{documentID}/data").document("general").set(general)
             self.db.collection(f"anime_data/{documentID}/data").document("files").set(files)
             self.db.collection(f"anime_data/{documentID}/data").document("media").set(media)
