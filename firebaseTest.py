@@ -60,7 +60,6 @@ class AnimeFirebaseData:
         # confirms a new episode was added
         return True
             
-    
     def createAnime(
         self, 
         animeName,
