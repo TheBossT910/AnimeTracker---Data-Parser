@@ -16,39 +16,13 @@ class AnimeFirebaseData:
     # save the list of animes as anilist_ids
     titles = set()
     
-    # def __init__(self):
-    #     pass
-        
+    # gets all the anilist_ids and saves them to a set
     @classmethod
     def getAnimeList(cls):
-        # gets all the anilist_ids and saves them to a set
         docs = db.collection("anime_data").stream()
         cls.titles = {doc.to_dict()['anilist_id'] for doc in docs}
-
-    # DEBUG
-    # def getAnime(self, animeID):
-    #     # gets a specific anime from the collection "animes"
-    #     specificAnime = self.db.collection(f"anime_data/{animeID}/data")
-    #     animeFiles = specificAnime.document("files").get().to_dict()
-        
-    #     # fetch and return the anilist ID
-    #     anilistID = animeFiles["anilist_id"]
-    #     return anilistID
     
-    # def updateDescription(self, animeID, newDescription = ""):
-    #     # updates the description of the anime
-    #     specificAnime = self.db.collection(f"anime_data/{animeID}/data")
-    #     animeGeneral = specificAnime.document("general").get().to_dict()
-        
-    #     # don't update if the new description is the same as the old one or if it's empty
-    #     if (newDescription == animeGeneral["description"] or newDescription == ""):
-    #         return False
-        
-    #     # update the description
-    #     specificAnime.document("general").update({"description": newDescription})
-    #     return True
-    
-    # method to update the number of episodes and add information for the new episode
+    # update the number of episodes and add information for the new episode
     @classmethod
     def updateEpisodes(cls, animeID, newEpisode = -1, content = {}):
         specificAnime = db.collection(f"anime_data/{animeID}/data")
@@ -127,20 +101,3 @@ class AnimeFirebaseData:
 # AnimeFirebaseData.getAnimeList()
 # AnimeFirebaseData.createAnime()
 # AnimeFirebaseData.getAnimeList()
-# myObj = AnimeFirebaseData()
-
-# # creating a new anime document
-# wasCreated = myObj.createAnime()
-# print(wasCreated)
-
-# mediaContent = {
-#     "air_day": "",
-#     "air_time": "",
-#     "description": "",
-#     "name_eng": "",
-#     "name_native": "",
-#     "recap": "",
-#     }
-
-# myVal = myObj.updateEpisodes("b274de57-2bcc-41f0-9744-f03804704a1cPYTHON-TEST", 2, mediaContent)
-# print(myVal)
