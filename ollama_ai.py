@@ -5,12 +5,21 @@
 
 from ollama import chat
 from ollama import ChatResponse
+from ai_prompts import Prompts
 
 response: ChatResponse = chat(model='mistral', messages=[
   {
-    'role': 'user',
-    'content': 'What is 1 + 2',
+    'role': 'system',
+    'content': Prompts.setup_prompt,
   },
+  {
+    'role': 'user',
+    'content': Prompts.example_solo_leveling,
+  },
+  {
+    'role': 'user',
+    'content': Prompts.example_solo_leveling,
+  }
 ])
 print(response['message']['content'])
 # or access fields directly from the response object
