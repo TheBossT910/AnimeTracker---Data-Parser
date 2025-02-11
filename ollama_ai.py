@@ -16,11 +16,8 @@ response: ChatResponse = chat(model='mistral', messages=[
     'role': 'user',
     'content': Prompts.example_solo_leveling,
   },
-  {
-    'role': 'user',
-    'content': Prompts.example_solo_leveling,
-  }
 ])
+
 print(response['message']['content'])
 # or access fields directly from the response object
 # print(response.message.content)
