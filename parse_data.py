@@ -8,3 +8,10 @@
 # getAiringSchedule specific parse (this would work for both weekly fetch and daily fetch)
 
 # FETCH FB DATA?
+class ParseData:
+    def formatNewlyAdded(cls, raw):
+        for anime in raw:
+            
+        
+        
+        pass

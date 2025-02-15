@@ -46,6 +46,10 @@ query Page($page: Int, $perPage: Int, $startDateGreater: FuzzyDateInt, $format: 
         }
         response = requests.post(cls.url_anilist, json={'query': query, 'variables': variables}).json()
         print(response)
+        rawData = response.data.Page.media
+        hasNextPage = response.data.Page.pageInfo.hasNextPage
+        # TODO: keep looping and parsing data until hasNextPage = false
+        
         # TODO: return filtered data? Call fn!
         pass
     
@@ -130,11 +134,11 @@ query AiringSchedules($page: Int, $perPage: Int, $notYetAired: Boolean, $airingA
 
 
 
-# FetchData.getNewlyAdded(3, 20250101)
+FetchData.getNewlyAdded(3, 20250101)
 # Unix timestamps
 # FetchData.getAiringSchedule(3, 1738990800, 1740286800)
 # FetchData.getAiringDay(1, 1738990800)
-FetchData.getAiringWeek(1, 1738990800)
+# FetchData.getAiringWeek(1, 1738990800)
 
 
 # Saving rough GraphQL queries
