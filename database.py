@@ -1,6 +1,6 @@
 # Taha Rashid
 # Jan 29 2025
-# Description: This program is a test program to test accessing and writing to Firebase.
+# Description: Access and write to Firebase
 
 import uuid
 import firebase_admin
