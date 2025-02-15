@@ -1,7 +1,7 @@
 # Taha Rashid
 # February 10 2025
-# Using Ollama to run local AI models
-# You need to start the Ollama app before we can run the program
+# Description: Using Ollama to run local AI models (Mistral) to create anime recaps
+# NOTE: You need to start the Ollama app before we can run the program
 
 from ollama import chat
 from ollama import ChatResponse
