@@ -3,6 +3,7 @@
 # Description: Fetchs new/updated anime data via AniList API using GraphQL
 
 import requests
+from anime_id import load_json_as_dict, find_id
 
 class FetchData:
     # TODO:
@@ -21,7 +22,11 @@ class FetchData:
     
     @classmethod
     def getNewlyAdded(cls, page, startDateGreater):
-        query = '''
+      # returns a list of main, general, and files objects with parsed data for all newly added animes
+      
+      # AniList API
+      # TODO: keep looping and parsing data until hasNextPage = false
+      query = '''
 query Page($page: Int, $perPage: Int, $startDateGreater: FuzzyDateInt, $format: MediaFormat) {
   Page(page: $page, perPage: $perPage) {
     media(startDate_greater: $startDateGreater, format: $format) {
@@ -30,6 +35,15 @@ query Page($page: Int, $perPage: Int, $startDateGreater: FuzzyDateInt, $format: 
         native
         romaji
       }
+      episodes
+      season
+      seasonYear
+      coverImage {
+        extraLarge
+      }
+      description
+      bannerImage
+      id
     }
     pageInfo {
       hasNextPage
@@ -37,21 +51,101 @@ query Page($page: Int, $perPage: Int, $startDateGreater: FuzzyDateInt, $format: 
   }
 }
         '''
-        variables = {
+      variables = {
         "page": page,
         "perPage": 50,
         "startDateGreater": startDateGreater,
         # TODO: Select between different formats
         "format": "TV",
-        }
-        response = requests.post(cls.url_anilist, json={'query': query, 'variables': variables}).json()
-        print(response)
-        rawData = response.data.Page.media
-        hasNextPage = response.data.Page.pageInfo.hasNextPage
-        # TODO: keep looping and parsing data until hasNextPage = false
+      }
+      
+      # get response from AniList
+      response = requests.post(cls.url_anilist, json={'query': query, 'variables': variables}).json()
+      # print(response)
+      
+      # saving all of our parsed data in an array
+      parsedData = []
+      file_path = "anime-list-full.json"
+      lookup_dict = load_json_as_dict(file_path)  
+      
+      rawData = response["data"]["Page"]["media"]
+      hasNextPage = response["data"]["Page"]["pageInfo"]["hasNextPage"]
+      while (hasNextPage):
+        # print(hasNextPage)
+        # print(rawData)
         
-        # TODO: return filtered data? Call fn!
-        pass
+        for anime in rawData:
+          main = {
+            "anilist_id": "",
+            "tvdb_id": "",
+            "relation_id": "",
+            "doc_id": "",
+            "db_version": "",
+            "title": "",
+          }
+          
+          general = {
+            "description": "",
+            "episodes": 0,
+            "premiere": "",
+            "rating": "",
+            "title_english": "",
+            "title_native": "",
+          }
+          
+          files = {
+            "box_image": "",
+            "icon_image": "",
+            "splash_image": "",
+          }
+          
+          # putting data into general
+          general["description"] = anime["description"] if not "null" else "N/A"
+          general["episodes"] = anime["episodes"] if not "null" else 0
+          
+          premiere = "N/A"
+          if (anime["season"] and anime["seasonYear"]):
+            premiere = anime["season"].capitalize() + " " + str(anime["seasonYear"])
+          general["premiere"] = premiere
+          
+          title_english = "N/A"
+          if (anime["title"]["english"]):
+            title_english = anime["title"]["english"]
+          elif (anime["title"]["romaji"]):
+            title_english = anime["title"]["romaji"]
+          general["title_english"] = title_english
+          
+          general["title_native"] = anime["title"]["native"] if not "null" else "N/A"
+          # print(general)
+          
+          # putting data into files
+          files["box_image"] = anime["coverImage"]["extraLarge"] if not "null" else "N/A"
+          files["splash_image"] = anime["bannerImage"] if not "null" else "N/A"
+          # print(files)
+          
+          # adding main document details
+          main["anilist_id"] = anime["id"]
+          main["tvdb_id"] = find_id(main["anilist_id"], lookup_dict)  
+          main["relation_id"] = ""
+          main["doc_id"] = ""
+          main["title"] = general["title_english"]
+          # print(main)
+          
+          response = {
+            "main": main,
+            "general": general,
+            "files": files,
+          }
+          parsedData.append(response)
+          
+        # getting the next page of data
+        variables["page"] = variables["page"] + 1
+        # print(variables["page"])
+        response = requests.post(cls.url_anilist, json={'query': query, 'variables': variables}).json()
+        rawData = response["data"]["Page"]["media"]
+        hasNextPage = response["data"]["Page"]["pageInfo"]["hasNextPage"]
+        
+      return parsedData
     
     # private method, __
     @classmethod
@@ -84,11 +178,8 @@ query AiringSchedules($page: Int, $perPage: Int, $notYetAired: Boolean, $airingA
         "airingAtLesser": airingAtLesser,
         }
         response = requests.post(cls.url_anilist, json={'query': query, 'variables': variables}).json()
-        print(response)
-        # TODO: return filtered data?, call fn!
-        pass
+        return response
         
-    
     @classmethod
     def getAiringWeek(cls, page, weekStart):
         # uses getAiringSchedule, 1 week interval
@@ -97,6 +188,10 @@ query AiringSchedules($page: Int, $perPage: Int, $notYetAired: Boolean, $airingA
         weekEnd = weekStart + 604800
         response = cls.__getAiringSchedule(page, weekStart, weekEnd)
         print(response)
+        # we want to get the Unix air date, and the anilist ID of the anime that is airing
+        # the way our UI will work is that it will display the recap of the show, and then when you click it in the schedule it takes you to the show and automatically loads the latest episode
+        # we pass in a parameter somehwere that just says load latest episode. This makes it so that we DON'T need to know the episode id, we just always load the latest episode!
+        
         # TODO: return filtered data, call fn!
         pass
     
@@ -132,9 +227,17 @@ query AiringSchedules($page: Int, $perPage: Int, $notYetAired: Boolean, $airingA
 
 
 
+import timeit
+start = timeit.timeit()
 
+myData = FetchData.getNewlyAdded(1, 20250101)
 
-FetchData.getNewlyAdded(3, 20250101)
+end = timeit.timeit()
+print(end - start)
+
+print(len(myData))
+
+# print(myData)
 # Unix timestamps
 # FetchData.getAiringSchedule(3, 1738990800, 1740286800)
 # FetchData.getAiringDay(1, 1738990800)
