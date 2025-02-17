@@ -4,3 +4,5 @@ animetracker-201c9-firebase-adminsdk-z85u9-9cf57505ac.json
 __pycache__/
 
 credentials.py
+
+tvdb.py
