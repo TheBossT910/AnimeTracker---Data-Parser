@@ -3,7 +3,7 @@
 # Description: Fetchs new/updated anime data via AniList API using GraphQL
 
 import requests
-import datetime
+# import datetime
 from anime_id import load_json_as_dict, find_id
 from database import AnimeFirebaseData
 from tvdb import TVDB_API
@@ -28,6 +28,7 @@ class FetchData:
     def getShow(cls, animeData, lookup_dict):
         main = {
           "anilist_id": "",
+          "mal_id": "",
           "tvdb_id": "",
           "relation_id": "",
           "doc_id": "",
@@ -53,8 +54,7 @@ class FetchData:
           # putting data into general
         general["description"] = animeData["description"] #if not "null" else "N/A"
         general["episodes"] = animeData["episodes"] #if not "null" else 0
-        
-          
+      
         premiere = "N/A"
         if (animeData["season"] and animeData["seasonYear"]):
           premiere = animeData["season"].capitalize() + " " + str(animeData["seasonYear"])
@@ -77,9 +77,11 @@ class FetchData:
           
          # adding main document details
         main["anilist_id"] = animeData["id"]
-        main["tvdb_id"] = find_id(main["anilist_id"], lookup_dict)  
+        main["mal_id"] = animeData["idMal"]
+        # TODO: Add mal_id fields everywhere, and make sure find_id uses MAL
+        main["tvdb_id"] = find_id(main["mal_id"], lookup_dict)  
         main["relation_id"] = ""
-        main["doc_id"] = ""
+        main["doc_id"] = main["anilist_id"]
         main["title"] = general["title_english"]
         # print(main)
           
@@ -106,11 +108,6 @@ query AiringSchedules($page: Int, $perPage: Int, $notYetAired: Boolean, $airingA
     airingSchedules(notYetAired: $notYetAired, airingAt_greater: $airingAtGreater, airingAt_lesser: $airingAtLesser) {
       episode
       media {
-        title {
-          english
-          native
-          romaji
-        }
         id
       }
       airingAt
@@ -128,6 +125,7 @@ query AiringSchedules($page: Int, $perPage: Int, $notYetAired: Boolean, $airingA
         "airingAtGreater": airingAtGreater,
         "airingAtLesser": airingAtLesser,
         }
+        
         parsedData = []
         response = requests.post(cls.url_anilist, json={'query': query, 'variables': variables}).json()
         rawData = response["data"]["Page"]["airingSchedules"]
@@ -136,36 +134,22 @@ query AiringSchedules($page: Int, $perPage: Int, $notYetAired: Boolean, $airingA
         while (hasNextPage):
           for anime in rawData:
             episode = {
-              "title_show": "", # this is the show's title
               "title_episode": "",
-              "anilist_id": 0,  # this also refers to the doc id
-              "tvdb_id": 0,     # this also refers to the episode id
-              "broadcast": 0,    # Unix broadcast time
+              "anilist_id": 0,  # same as doc id for anime
+              "tvdb_id": 0,     # same as doc id for episode
+              "broadcast": 0,
               "box_image": "",
               "runtime": 0,
               "description": "",
               "recap": ""             
             }
             
-            titleShow = "N/A"
-            if (anime["media"]["title"]["english"]):
-              titleShow = anime["media"]["title"]["english"]
-            elif (anime["media"]["title"]["romaji"]):
-              titleShow = anime["media"]["title"]["romaji"]
-            elif (anime["media"]["title"]["native"]):
-              titleShow = anime["media"]["title"]["english"]
-            episode["title_show"] = titleShow
-            
             episode["anilist_id"] = anime["media"]["id"]
             episode["broadcast"] = anime["airingAt"]
             
-            # print(episode)
-            
-            # TODO: Also scrape each episode's info on TVDB. If a show does not exist, we want to run a function to specifically create that show. 
-            # We will look up the show in Firebase using the AniList ID, and get the the TVDB id, then scrape the selected episode using that!
-            # We can select the correct season (and specifically the correct episode) by searching through all episodes for the matching air date of the episode.
-            # method to grab info from FB. if "false", then we create a new episode
+            # fetch corresponding anime
             fetchedAnime = AnimeFirebaseData.fd_getAnime(str(episode["anilist_id"]))
+            # create the show's information if it does not exist
             if (fetchedAnime == None):
               newAnimeQuery = '''
 query Media($mediaId: Int) {
@@ -184,6 +168,7 @@ query Media($mediaId: Int) {
       description
       bannerImage
       id
+      idMal
   }
 }
               '''
@@ -198,26 +183,29 @@ query Media($mediaId: Int) {
               lookup_dict = load_json_as_dict(file_path)
               newAnimeParsedData = cls.getShow(animeData, lookup_dict)
               # print(newAnimeParsedData)
+              
+              # add newly created show to database
               AnimeFirebaseData.fd_addAnime(newAnimeParsedData["main"], newAnimeParsedData["general"], newAnimeParsedData["files"])
             
-            # look up the anime
+            # get episode specific info from TVDB
             tvdbID = AnimeFirebaseData.fd_getAnime(episode["anilist_id"])["tvdb_id"]
             episode["tvdb_id"] = tvdbID
-            formattedDate = datetime.datetime.fromtimestamp(int(episode["broadcast"])).strftime('%Y-%m-%d')
-            # TODO: run function to scrape from tvdb
-            episodeInfo = TVDB_API.getEpisode(tvdbID, formattedDate)
+            # formattedDate = datetime.datetime.fromtimestamp(int(episode["broadcast"])).strftime('%Y-%m-%d')
+            episodeInfo = TVDB_API.getEpisode(tvdbID, episode["broadcast"])
+            
+            # add episode info to object if data was returned
             if (episodeInfo):
-              # print(episodeInfo)
               episode["title_episode"] = episodeInfo["name"]
-              episode["box_image"] = "https://artworks.thetvdb.com" + episodeInfo["image"]
+              if (episodeInfo["image"]):
+                episode["box_image"] = "https://artworks.thetvdb.com" + episodeInfo["image"]
+              else:
+                episode["box_image"] = "N/A"
               episode["description"] = episodeInfo["overview"]
               episode["runtime"] = episodeInfo["runtime"]
               # print(episode)
               AnimeFirebaseData.fd_addEpisode(episode["anilist_id"], episode["tvdb_id"], episode)
-              
-            parsedData.append(episode)
             
-              
+            parsedData.append(episode)
             
           # getting the next page
           variables["page"] = variables["page"] + 1
@@ -251,6 +239,7 @@ query Page($page: Int, $perPage: Int, $startDateGreater: FuzzyDateInt, $format: 
       description
       bannerImage
       id
+      idMal
     }
     pageInfo {
       hasNextPage
@@ -277,10 +266,7 @@ query Page($page: Int, $perPage: Int, $startDateGreater: FuzzyDateInt, $format: 
       
       rawData = response["data"]["Page"]["media"]
       hasNextPage = True
-      while (hasNextPage):
-        # print(hasNextPage)
-        # print(rawData)
-        
+      while (hasNextPage):        
         for anime in rawData:
           response = cls.getShow(anime, lookup_dict)
           parsedData.append(response)

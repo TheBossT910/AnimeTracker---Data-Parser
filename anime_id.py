@@ -8,17 +8,17 @@ def load_json_as_dict(file_path):
     with open(file_path, "r", encoding="utf-8") as file:
         data = json.load(file)  # Load everything into memory
         return {
-            obj.get("anilist_id"): obj.get("thetvdb_id") 
+            obj.get("mal_id"): obj.get("thetvdb_id") 
             for obj in data 
-            if obj.get("anilist_id") is not None  # Ensure we only include objects with an anilist_id
+            if obj.get("mal_id") is not None  # Ensure we only include objects with an anilist_id
         }
 
 def find_id(target_id, lookup_dict):
     return lookup_dict.get(target_id)  # O(1) lookup
 
 # # Load once into memory
-# file_path = "anime-list-full.json"
-# lookup_dict = load_json_as_dict(file_path)  
+file_path = "anime-list-full.json"
+lookup_dict = load_json_as_dict(file_path)  
 
 # # Now lookups are instant
 # import timeit
