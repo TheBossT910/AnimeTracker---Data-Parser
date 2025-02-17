@@ -149,7 +149,13 @@ query Page($page: Int, $perPage: Int, $startDateGreater: FuzzyDateInt, $format: 
     
     # private method, __
     @classmethod
-    def __getAiringSchedule(cls, page, airingAtGreater, airingAtLesser):
+    def getAiringSchedule(cls, page, airingAtGreater, airingAtLesser):
+        # we want to get the Unix air date, and the anilist ID of the anime that is airing
+        # the way our UI will work is that it will display the recap of the show, and then when you click it in the schedule it takes you to the show and automatically loads the latest episode
+        # we pass in a parameter somehwere that just says load latest episode. This makes it so that we DON'T need to know the episode id, we just always load the latest episode!
+        # whenever we parse this, we also want to create the related episode field (with all of its related information) in Firebase 
+        # TODO: get the show's season (for when we want to grab data via TVDB)
+        
         query = '''
 query AiringSchedules($page: Int, $perPage: Int, $notYetAired: Boolean, $airingAtGreater: Int, $airingAtLesser: Int) {
   Page(page: $page, perPage: $perPage) {
@@ -161,6 +167,7 @@ query AiringSchedules($page: Int, $perPage: Int, $notYetAired: Boolean, $airingA
           native
           romaji
         }
+        id
       }
       airingAt
     }
@@ -177,8 +184,44 @@ query AiringSchedules($page: Int, $perPage: Int, $notYetAired: Boolean, $airingA
         "airingAtGreater": airingAtGreater,
         "airingAtLesser": airingAtLesser,
         }
+        parsedData = []
         response = requests.post(cls.url_anilist, json={'query': query, 'variables': variables}).json()
-        return response
+        rawData = response["data"]["Page"]["airingSchedules"]
+        hasNextPage = response["data"]["Page"]["pageInfo"]["hasNextPage"]
+        
+        while (hasNextPage):
+          for anime in rawData:
+            episode = {
+              "title": "",      # this is the show's title
+              "anilist_id": 0,  # this also refers to the doc id
+              "broadcast": 0    # Unix broadcast time
+            }
+            
+            title = "N/A"
+            if (anime["media"]["title"]["english"]):
+              title = anime["media"]["title"]["english"]
+            elif (anime["media"]["title"]["romaji"]):
+              title = anime["media"]["title"]["romaji"]
+            elif (anime["media"]["title"]["native"]):
+              title = anime["media"]["title"]["english"]
+            episode["title"] = title
+            
+            episode["anilist_id"] = anime["media"]["id"]
+            episode["broadcast"] = anime["airingAt"]
+            
+            # print(episode)
+            parsedData.append(episode)
+            
+            # TODO: Also scrape each episode's info on TVDB. If a show does not exist, we want to run a function to specifically create that show. 
+            # We will look up the show in Firebase using the AniList ID, and get the the TVDB id, then scrape the selected episode using that!
+            
+          # getting the next page
+          variables["page"] = variables["page"] + 1
+          response = requests.post(cls.url_anilist, json={'query': query, 'variables': variables}).json()
+          rawData = response["data"]["Page"]["airingSchedules"]
+          hasNextPage = response["data"]["Page"]["pageInfo"]["hasNextPage"]
+        
+        return parsedData
         
     @classmethod
     def getAiringWeek(cls, page, weekStart):
@@ -187,13 +230,7 @@ query AiringSchedules($page: Int, $perPage: Int, $notYetAired: Boolean, $airingA
         # 604,800 sec/week
         weekEnd = weekStart + 604800
         response = cls.__getAiringSchedule(page, weekStart, weekEnd)
-        print(response)
-        # we want to get the Unix air date, and the anilist ID of the anime that is airing
-        # the way our UI will work is that it will display the recap of the show, and then when you click it in the schedule it takes you to the show and automatically loads the latest episode
-        # we pass in a parameter somehwere that just says load latest episode. This makes it so that we DON'T need to know the episode id, we just always load the latest episode!
-        
-        # TODO: return filtered data, call fn!
-        pass
+        return response
     
     @classmethod
     def getAiringDay(cls, page, dayStart):
@@ -201,9 +238,7 @@ query AiringSchedules($page: Int, $perPage: Int, $notYetAired: Boolean, $airingA
         # 86,400 sec/day
         dayEnd = dayStart + 86400
         response = cls.__getAiringSchedule(page, dayStart, dayEnd)
-        print(response)
-        # TODO: return filtered data, call fn!
-        pass
+        return response
     
     # TODO: implement
     @classmethod
@@ -227,82 +262,19 @@ query AiringSchedules($page: Int, $perPage: Int, $notYetAired: Boolean, $airingA
 
 
 
-import timeit
-start = timeit.timeit()
+# import timeit
+# start = timeit.timeit()
 
-myData = FetchData.getNewlyAdded(1, 20250101)
+# myData = FetchData.getNewlyAdded(1, 20250101)
 
-end = timeit.timeit()
-print(end - start)
+# end = timeit.timeit()
+# print(end - start)
 
-print(len(myData))
+# print(len(myData))
 
 # print(myData)
 # Unix timestamps
-# FetchData.getAiringSchedule(3, 1738990800, 1740286800)
+temp = FetchData.getAiringSchedule(1, 1738990800, 1740286800)
+print(temp)
 # FetchData.getAiringDay(1, 1738990800)
 # FetchData.getAiringWeek(1, 1738990800)
-
-
-# Saving rough GraphQL queries
-'''
-Gets a page of the animes airing between 00:00 Feb 15 and 24:00 Feb 15 (Basically on Feb 15)
-This can be used to grab animes airing daily AND animes airing a week after/before. Just need to adjust the times that we want to look between
-
-query AiringSchedules($page: Int, $perPage: Int, $notYetAired: Boolean, $airingAtGreater: Int, $airingAtLesser: Int) {
-  Page(page: $page, perPage: $perPage) {
-    airingSchedules(notYetAired: $notYetAired, airingAt_greater: $airingAtGreater, airingAt_lesser: $airingAtLesser) {
-      episode
-      media {
-        title {
-          english
-          native
-          romaji
-        }
-      }
-      airingAt
-    }
-    pageInfo {
-      hasNextPage
-    }
-  }
-}
-
-HEADER
-{
-  "page": 3,
-  "perPage": 50,
-  "notYetAired": false,
-  "airingAtGreater": 1738990800,
-  "airingAtLesser": 1740286800,
-}
-'''
-
-# We could get airing animes by filitering based on season (Winter 2025, etc.)
-# actually, base it on "Start date greater than" and input the start date to be the last date you previously checked from
-'''
-Get newly added animes
-
-query Page($page: Int, $perPage: Int, $startDateGreater: FuzzyDateInt, $format: MediaFormat, $airingAtGreater: Int) {
-  Page(page: $page, perPage: $perPage) {
-    media(startDate_greater: $startDateGreater, format: $format) {
-      title {
-        english
-        native
-        romaji
-      }
-    }
-    pageInfo {
-      hasNextPage
-    } 
-  }
-}
-
-HEADER
-{
-  "page": 3,
-  "perPage": 50,
-  "startDateGreater": 20250101,
-  "format": "TV",
-}
-'''
