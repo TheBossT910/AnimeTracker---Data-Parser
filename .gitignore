@@ -6,3 +6,5 @@ __pycache__/
 credentials.py
 
 tvdb.py
+
+api_tests/tvdb_repsonse.json
