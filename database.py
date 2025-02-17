@@ -96,8 +96,40 @@ class AnimeFirebaseData:
             return False
         
         return True
+    
+    @classmethod
+    def fd_addAnime(cls, main, general, files):
+        # creating anime document id. Same ID as AniList
+        documentID = str(main["anilist_id"])
+        
+        # creating the main anime document
+        db.collection("anime_data").document(documentID).set(main)
+        # adding the subcollections
+        db.collection(f"anime_data/{documentID}/data").document("general").set(general)
+        db.collection(f"anime_data/{documentID}/data").document("files").set(files)
+        db.collection(f"anime_data/{documentID}/episodes").document("info").set({ "latest_episode": ""})
+        # print(main, general, files)
+    
+    @classmethod 
+    def fd_addEpisode(cls, animeID, episodeID, data):
+        db.collection(f"anime_data/{str(animeID)}/episodes").document(str(episodeID)).set(data, merge=True)
+        
+    
+    @classmethod
+    def fd_getAnime(cls, animeID):
+        response = db.collection("anime_data").document(str(animeID)).get()
+        return response.to_dict()
+    
+    @classmethod
+    def fd_getEpisode(cls, animeID, episodeID):
+        response = db.collection(f"anime_data/{animeID}/episodes").document(episodeID).get()
+        return response.to_dict()
+        
+        
 
 # testing class
 # AnimeFirebaseData.getAnimeList()
 # AnimeFirebaseData.createAnime()
 # AnimeFirebaseData.getAnimeList()
+
+# print(AnimeFirebaseData.fd_getAnime("c8e206a7-f919-4f78-ac8d-8541dbfba137"))
