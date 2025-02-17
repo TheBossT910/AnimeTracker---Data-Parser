@@ -16,14 +16,14 @@ def load_json_as_dict(file_path):
 def find_id(target_id, lookup_dict):
     return lookup_dict.get(target_id)  # O(1) lookup
 
-# Load once into memory
+# # Load once into memory
 # file_path = "anime-list-full.json"
 # lookup_dict = load_json_as_dict(file_path)  
 
-# Now lookups are instant
+# # Now lookups are instant
 # import timeit
 # start = timeit.timeit()
-# result = find_id(176496, lookup_dict)  
+# result = find_id(52299, lookup_dict)  
 # end = timeit.timeit()
 # print(end - start)
 # print(result) 
