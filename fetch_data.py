@@ -95,7 +95,7 @@ class FetchData:
       
     # private method, __
     @classmethod
-    def getAiringSchedule(cls, page, airingAtGreater, airingAtLesser):
+    def __getAiringSchedule(cls, page, airingAtGreater, airingAtLesser):
         # we want to get the Unix air date, and the anilist ID of the anime that is airing
         # the way our UI will work is that it will display the recap of the show, and then when you click it in the schedule it takes you to the show and automatically loads the latest episode
         # we pass in a parameter somehwere that just says load latest episode. This makes it so that we DON'T need to know the episode id, we just always load the latest episode!
@@ -177,7 +177,10 @@ query Media($mediaId: Int) {
               }
               newAnimeResponse = requests.post(cls.url_anilist, json={'query': newAnimeQuery, 'variables': newAnimeVariables}).json()
               # print(newAnimeResponse)
-              animeData = newAnimeResponse["data"]["Media"]
+              try:
+                animeData = newAnimeResponse["data"]["Media"]
+              except:
+                animeData = {}
               
               file_path = "anime-list-full.json"
               lookup_dict = load_json_as_dict(file_path)
@@ -270,6 +273,7 @@ query Page($page: Int, $perPage: Int, $startDateGreater: FuzzyDateInt, $format: 
         for anime in rawData:
           response = cls.getShow(anime, lookup_dict)
           parsedData.append(response)
+          # AnimeFirebaseData.fd_addAnime(response["main"], response["general"], response["files"])
           
         # getting the next page of data
         variables["page"] = variables["page"] + 1
@@ -317,18 +321,29 @@ query Page($page: Int, $perPage: Int, $startDateGreater: FuzzyDateInt, $format: 
 import timeit
 start = timeit.timeit()
 
-temp = FetchData.getAiringSchedule(1, 1739595600, 1739682000)
+# temp = FetchData.getAiringSchedule(1, 1739595600, 1739682000)
+# temp = FetchData.getAiringWeek(1, 1738990800)
+# temp = FetchData.getAiringDay(1, 1739682000)
+contentArray = FetchData.getNewlyAdded(1, 20240801)
 
 end = timeit.timeit()
 print(end - start)
 
-print(len(temp))
+print(len(contentArray))
+print("END of getting data")
+
+start = timeit.timeit()
+AnimeFirebaseData.fd_addAnimeBatch(contentArray)
+end = timeit.timeit()
+print(end - start)
+print("END of adding data to Firebase")
+
 
 # print(myData)
 # Unix timestamps
 
 # temp = FetchData.getAiringWeek(1, 1738990800)
-# temp = FetchData.getAiringDay(1, 1739682000)
+
 # print(temp)
 # FetchData.getAiringDay(1, 1738990800)
 # FetchData.getAiringWeek(1, 1738990800)
