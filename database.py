@@ -109,6 +109,47 @@ class AnimeFirebaseData:
         db.collection(f"anime_data/{documentID}/data").document("files").set(files)
         db.collection(f"anime_data/{documentID}/episodes").document("info").set({ "latest_episode": ""})
         # print(main, general, files)
+        
+    @classmethod
+    def fd_addAnimeBatch(cls, contentArray):
+        batch = db.batch()
+        batchCount = 0
+        
+        for data in contentArray:
+            # incrementing counter
+            batchCount = batchCount + 1
+            
+            # commit batch if data count is >= 500
+            if (batchCount >= 500):
+                batch.commit()
+                batchCount = 0
+            
+            # saving data into variables
+            main = data["main"]
+            general = data["general"]
+            files = data["files"]
+            episodes = {
+                "latest_episode": "" 
+            }
+            documentID = str(main["doc_id"])
+            
+            # creating references to locations in database
+            # main document
+            mainRef = db.collection("anime_data").document(documentID)
+            # subcollections
+            generalRef = db.collection(f"anime_data/{documentID}/data").document("general")
+            filesRef = db.collection(f"anime_data/{documentID}/data").document("files")
+            episodesRef = db.collection(f"anime_data/{documentID}/episodes").document("info")
+            
+            # adding data to reference locations
+            batch.set(mainRef, main)
+            batch.set(generalRef, general)
+            batch.set(filesRef, files)
+            batch.set(episodesRef, episodes)
+        
+        # commit the last set of items in batch
+        batch.commit()
+        
     
     @classmethod 
     def fd_addEpisode(cls, animeID, episodeID, data):
