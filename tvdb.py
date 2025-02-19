@@ -3,6 +3,7 @@
 # Testing TVDB
 
 import tvdb_v4_official
+# import time
 import datetime
 from credentials import Credentials
 
@@ -55,12 +56,15 @@ class TVDB_API:
         # TODO: only return episodes that have aired (check against current date)
         # grabs the info for 1 episode
         currentEpisode = cls.getEpisode(seriesID, air_date)
-        season = currentEpisode["seasonNumber"]
+        if (currentEpisode):
+            season = currentEpisode["seasonNumber"]
+        else:
+            season = None
         
         episodes = []
         page = 0
         
-        while(True):        
+        while(True and season != None):        
             # fetch a page of episodes from a series by season_type (type is "default" if unspecified)
             info = tvdb.get_series_episodes(id=seriesID, page=page, lang="eng")
             
@@ -79,5 +83,5 @@ class TVDB_API:
         
 # 389597, 1740236400
 # temp = TVDB_API.getEpisode(72454, 1739595600)
-temp = TVDB_API.getSeason(389597, 1740236400)
-print(temp)
+# temp = TVDB_API.getSeason(389597, 1740236400)
+# print(temp)
