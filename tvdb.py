@@ -74,6 +74,10 @@ class TVDB_API:
             
             for episode in info['episodes']:
                 if episode["seasonNumber"] == season:
+                    # convert the broadcast date to Unix timestamp
+                    # rawBroadcast = episode["aired"]
+                    # broadcast = time.mktime(datetime.datetime.strptime(rawBroadcast, "%Y-%m-%d").timetuple())
+                    # episode["aired"] = broadcast
                     episodes.append(episode)
             
             # search the next page
