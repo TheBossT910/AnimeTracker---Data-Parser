@@ -335,6 +335,7 @@ query Page($page: Int, $perPage: Int, $startDateGreater: FuzzyDateInt, $format: 
       file_path = "anime-list-full.json"
       lookup_dict = load_json_as_dict(file_path)  
       
+      print(response)
       rawData = response["data"]["Page"]["media"]
       hasNextPage = True
       while (hasNextPage):        
@@ -366,6 +367,7 @@ query Page($page: Int, $perPage: Int, $startDateGreater: FuzzyDateInt, $format: 
         recentAirDate = episode["recentAirDate"]
         if (recentAirDate != None):
           cls.getSeasonEpisodes(episode["anilist_id"], episode["tvdb_id"], episode["recentAirDate"])
+        
       
       return parsedData, episodeData
     
@@ -415,7 +417,8 @@ contentArray, episodesArray = FetchData.getNewlyAdded(1, 20240801)
 # end = timeit.timeit()
 # print(end - start)
 
-# print(len(contentArray))
+print(len(contentArray))
+print(len(episodesArray))
 # print("END of getting data")
 
 # start = timeit.timeit()
@@ -437,5 +440,6 @@ contentArray, episodesArray = FetchData.getNewlyAdded(1, 20240801)
 # Solo Leveling S2
 # temp = FetchData.getSeasonEpisodes(176496, 389597, 1740236400)
 # temp = FetchData.getSeasonEpisodes(151514, 421583, 1729349160)
+# temp = FetchData.getSeasonEpisodes(176158, 447749, 1735394400)
 # print(len(temp))
 # print(temp)
