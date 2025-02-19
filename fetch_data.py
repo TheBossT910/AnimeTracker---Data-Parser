@@ -3,7 +3,6 @@
 # Description: Fetchs new/updated anime data via AniList API using GraphQL
 
 import requests
-# import datetime
 from anime_id import load_json_as_dict, find_id
 from database import AnimeFirebaseData
 from tvdb import TVDB_API
@@ -23,7 +22,7 @@ class FetchData:
     
     url_anilist = 'https://graphql.anilist.co'
     
-    # private method
+    # private method?
     @classmethod
     def getShow(cls, animeData, lookup_dict):
         main = {
@@ -92,6 +91,69 @@ class FetchData:
           }
         
         return response
+      
+    # private method
+    @classmethod
+    def getSeasonEpisodes(cls, anilistID, tvdbID, recentAirDate):      
+      # get all episodes in the current season
+      seasonEpisodes = TVDB_API.getSeason(tvdbID, recentAirDate)
+      episodes = []
+      
+      # get all of the airing dates for the current season
+      query = '''
+query Media($mediaId: Int) {
+  Media(id: $mediaId) {
+    airingSchedule {
+      nodes {
+        episode
+        airingAt
+      }
+    }
+  }
+}
+        '''
+      variables = {
+          "mediaId": anilistID
+      }
+      response = requests.post(cls.url_anilist, json={'query': query, 'variables': variables}).json()
+      try:
+        airDates = response["data"]["Media"]["airingSchedule"]["nodes"]
+      except:
+        airDates = []
+      
+      for episode in seasonEpisodes:
+        episodeObj = {
+        "title_episode": "",
+        "anilist_id": 0,  # same as doc id for anime
+        "tvdb_id": 0,     # same as doc id for episode
+        "broadcast": 0,
+        "box_image": "",
+        "runtime": 0,
+        "description": "",
+        "recap": ""             
+        }
+        
+        # adding all information to episodeObj
+        if (episode["name"]):
+          episodeObj["title_episode"] = episode["name"]
+        episodeObj["anilist_id"] = anilistID
+        episodeObj["tvdb_id"] = episode["id"]
+        # get the aired date from AniList
+        try:
+          episodeObj["broadcast"] = airDates[episode["number"] - 1]["airingAt"]
+        except:
+          episodeObj["broadcast"] = 0
+        if (episode["image"]):
+          episodeObj["box_image"] = "https://artworks.thetvdb.com" + episode["image"]
+        episodeObj["runtime"] = episode["runtime"]
+        episodeObj["description"] = episode["overview"]
+      
+        # adding obj to list of all episodes
+        episodes.append(episodeObj)
+        
+      # add all episodes to anime
+      AnimeFirebaseData.fd_addEpisodesBatch(anilistID, episodes)
+      return episodes
       
     # private method, __
     @classmethod
@@ -243,6 +305,11 @@ query Page($page: Int, $perPage: Int, $startDateGreater: FuzzyDateInt, $format: 
       bannerImage
       id
       idMal
+      airingSchedule {
+        nodes {
+          airingAt
+        }
+      }
     }
     pageInfo {
       hasNextPage
@@ -264,6 +331,7 @@ query Page($page: Int, $perPage: Int, $startDateGreater: FuzzyDateInt, $format: 
       
       # saving all of our parsed data in an array
       parsedData = []
+      episodeData = []
       file_path = "anime-list-full.json"
       lookup_dict = load_json_as_dict(file_path)  
       
@@ -272,8 +340,15 @@ query Page($page: Int, $perPage: Int, $startDateGreater: FuzzyDateInt, $format: 
       while (hasNextPage):        
         for anime in rawData:
           response = cls.getShow(anime, lookup_dict)
+          responseMain = response["main"]
+          referenceAirDate = None
+          if (anime["airingSchedule"]["nodes"]):
+            referenceAirDate = anime["airingSchedule"]["nodes"][0]["airingAt"]
+          
+          # appending computed information to lists
+          episodeData.append({"anilist_id": responseMain["anilist_id"], "tvdb_id": responseMain["tvdb_id"], "recentAirDate": referenceAirDate})
           parsedData.append(response)
-          # AnimeFirebaseData.fd_addAnime(response["main"], response["general"], response["files"])
+          
           
         # getting the next page of data
         variables["page"] = variables["page"] + 1
@@ -281,8 +356,17 @@ query Page($page: Int, $perPage: Int, $startDateGreater: FuzzyDateInt, $format: 
         response = requests.post(cls.url_anilist, json={'query': query, 'variables': variables}).json()
         rawData = response["data"]["Page"]["media"]
         hasNextPage = response["data"]["Page"]["pageInfo"]["hasNextPage"]
-        
-      return parsedData
+      
+      # adding animes to database
+      AnimeFirebaseData.fd_addAnimeBatch(parsedData)
+      
+      for episode in episodeData:
+        # adding all episodes to animes
+        recentAirDate = episode["recentAirDate"]
+        if (recentAirDate != None):
+          cls.getSeasonEpisodes(episode["anilist_id"], episode["tvdb_id"], episode["recentAirDate"])
+      
+      return parsedData, episodeData
     
     @classmethod
     def getAiringWeek(cls, page, weekStart):
@@ -304,7 +388,8 @@ query Page($page: Int, $perPage: Int, $startDateGreater: FuzzyDateInt, $format: 
     # TODO: implement
     @classmethod
     def updateNextAir(cls, oldDayAir):
-        # Need to know the structure of oldDayAir to do anything here...  
+        # each item is an episode object
+        # for episode in oldDayAir:
         pass
     
     # TODO: implement
@@ -318,25 +403,25 @@ query Page($page: Int, $perPage: Int, $startDateGreater: FuzzyDateInt, $format: 
 
 
 
-import timeit
-start = timeit.timeit()
+# import timeit
+# start = timeit.timeit()
 
 # temp = FetchData.getAiringSchedule(1, 1739595600, 1739682000)
 # temp = FetchData.getAiringWeek(1, 1738990800)
 # temp = FetchData.getAiringDay(1, 1739682000)
-contentArray = FetchData.getNewlyAdded(1, 20240801)
+contentArray, episodesArray = FetchData.getNewlyAdded(1, 20240801)
 
-end = timeit.timeit()
-print(end - start)
+# end = timeit.timeit()
+# print(end - start)
 
-print(len(contentArray))
-print("END of getting data")
+# print(len(contentArray))
+# print("END of getting data")
 
-start = timeit.timeit()
-AnimeFirebaseData.fd_addAnimeBatch(contentArray)
-end = timeit.timeit()
-print(end - start)
-print("END of adding data to Firebase")
+# start = timeit.timeit()
+# AnimeFirebaseData.fd_addAnimeBatch(contentArray)
+# end = timeit.timeit()
+# print(end - start)
+# print("END of adding data to Firebase")
 
 
 # print(myData)
@@ -347,3 +432,9 @@ print("END of adding data to Firebase")
 # print(temp)
 # FetchData.getAiringDay(1, 1738990800)
 # FetchData.getAiringWeek(1, 1738990800)
+
+# Solo Leveling S2
+# temp = FetchData.getSeasonEpisodes(176496, 389597, 1740236400)
+# temp = FetchData.getSeasonEpisodes(151514, 421583, 1729349160)
+# print(len(temp))
+# print(temp)
