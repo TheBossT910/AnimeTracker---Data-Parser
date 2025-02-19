@@ -343,7 +343,8 @@ query Page($page: Int, $perPage: Int, $startDateGreater: FuzzyDateInt, $format: 
           responseMain = response["main"]
           referenceAirDate = None
           if (anime["airingSchedule"]["nodes"]):
-            referenceAirDate = anime["airingSchedule"]["nodes"][0]["airingAt"]
+            arraySpot = (len(anime["airingSchedule"]["nodes"]) - 1) // 2
+            referenceAirDate = anime["airingSchedule"]["nodes"][arraySpot]["airingAt"]
           
           # appending computed information to lists
           episodeData.append({"anilist_id": responseMain["anilist_id"], "tvdb_id": responseMain["tvdb_id"], "recentAirDate": referenceAirDate})
