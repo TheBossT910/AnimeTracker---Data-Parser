@@ -12,6 +12,8 @@ class TVDB_API:
     @classmethod
     async def getEpisode(cls, seriesID, air_date):
         # get potential dates to check
+        if (air_date == None):
+            return None
         airDateCurrent = datetime.datetime.fromtimestamp(air_date).strftime('%Y-%m-%d')
         airDateDown = datetime.datetime.fromtimestamp(air_date - 86400).strftime('%Y-%m-%d')
         airDateUp = datetime.datetime.fromtimestamp(air_date + 86400).strftime('%Y-%m-%d')
