@@ -96,6 +96,8 @@ class TVDB_API:
                     
         # return a list of episodes in the current season
         return episodes
+    
+    # TODO: create a method to fetch updated auth tokens (daily)
 
 # testing
 # specific episode
