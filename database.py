@@ -150,6 +150,30 @@ class AnimeFirebaseData:
         # commit the last set of items in batch
         batch.commit()
         
+    @classmethod
+    def fd_addEpisodesBatch2(cls, contentArray):
+        batch = db.batch()
+        batchCount = 0
+        
+        for show in contentArray:
+            animeID = show["anilist_id"]
+            episodes = show["episodes"]
+            
+            # adding each episode in a season
+            for episode in episodes:
+                batchCount = batchCount + 1
+                
+                # commit to batch if >=500
+                if (batchCount >= 500):
+                    batch.commit()
+                    batchCount = 0
+                
+                episodeID = str(episode["tvdb_id"])
+                showRef = db.collection(f"anime_data/{animeID}/episodes").document(episodeID)
+                batch.set(showRef, episode)
+        
+        # commit the last set of items in the batch
+        batch.commit()
     
     @classmethod
     def fd_addEpisodesBatch(cls, animeID, data):
