@@ -2,7 +2,6 @@
 # February 20, 2025
 # Fetching data from TVDB API using async functions
 
-import asyncio
 import aiohttp
 import datetime
 from credentials import Credentials
