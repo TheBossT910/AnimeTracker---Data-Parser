@@ -84,9 +84,14 @@ class TVDB_API:
             page = page + 1
         
         return episodes
+    
+    @classmethod
+    # TODO: implement this
+    def getSeasonAsync():
+        pass
         
 # 389597, 1740236400
 # temp = TVDB_API.getEpisode(72454, 1739595600)
 # temp = TVDB_API.getSeason(389597, 1740236400)
-# temp = TVDB_API.getSeason(447749, 1735394400)
+# temp = TVDB_API.getSeason(305089, 1739367000)
 # print(temp)
