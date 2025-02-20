@@ -5,7 +5,7 @@
 import requests
 from anime_id import load_json_as_dict, find_id
 from database import AnimeFirebaseData
-from tvdb import TVDB_API
+from old.tvdb import TVDB_API
 
 class FetchData:
     # TODO:
