@@ -7,6 +7,9 @@ import tvdb_v4_official
 import datetime
 from credentials import Credentials
 
+import asyncio
+import aiohttp
+
 tvdb = tvdb_v4_official.TVDB(Credentials.tvdb_api_key)
 # See https://github.com/thetvdb/v4-api
 
@@ -85,13 +88,19 @@ class TVDB_API:
         
         return episodes
     
-    @classmethod
-    # TODO: implement this
-    def getSeasonAsync():
-        pass
+    # @classmethod
+    # # TODO: implement this
+    # async def getSeasonAsync(cls):
+    #     async with aiohttp.ClientSession() as session:
+    #         async with session.get("http://python.org") as response:
+    #             saved = await response.text()
+    #             return saved
         
 # 389597, 1740236400
 # temp = TVDB_API.getEpisode(72454, 1739595600)
 # temp = TVDB_API.getSeason(389597, 1740236400)
 # temp = TVDB_API.getSeason(305089, 1739367000)
 # print(temp)
+
+# myResponse = asyncio.run(TVDB_API.getSeasonAsync())
+# print(myResponse)
