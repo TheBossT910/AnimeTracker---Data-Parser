@@ -1,6 +1,7 @@
 # Taha Rashid 
 # Feburary 16, 2025
 # Parse list of anime ids. Courtesy of ChatGPT
+# TODO: Make a new version where you coded everything yourself
 
 import json
 
