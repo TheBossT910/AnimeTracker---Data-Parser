@@ -97,6 +97,21 @@ class TVDB_API:
         # return a list of episodes in the current season
         return episodes
     
+    @classmethod
+    async def getSeasonWithRetry(cls, seriesID, airDates):
+        episodeCount = 0
+        while (airDates != None and episodeCount < len(airDates)):
+            seasonData = await cls.getSeason(seriesID, airDates[episodeCount]["airingAt"])
+            
+            # return if we found data
+            if len(seasonData) > 0:
+                return seasonData
+            
+            # look at the next episode air time
+            episodeCount = episodeCount + 1
+        # return empty array if there is no data
+        return []
+    
     # TODO: create a method to fetch updated auth tokens (daily)
 
 # testing
