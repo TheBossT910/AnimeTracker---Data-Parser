@@ -155,12 +155,11 @@ class AnimeFirebaseData:
         batch = db.batch()
         batchCount = 0
         
-        for show in contentArray:
-            animeID = show["anilist_id"]
-            episodes = show["episodes"]
+        for season in contentArray:
+            # TODO: grab the anilist ID here, as we don't need to for all episodes
             
             # adding each episode in a season
-            for episode in episodes:
+            for episode in season:
                 batchCount = batchCount + 1
                 
                 # commit to batch if >=500
@@ -168,6 +167,7 @@ class AnimeFirebaseData:
                     batch.commit()
                     batchCount = 0
                 
+                animeID = str(episode["anilist_id"])
                 episodeID = str(episode["tvdb_id"])
                 showRef = db.collection(f"anime_data/{animeID}/episodes").document(episodeID)
                 batch.set(showRef, episode)
